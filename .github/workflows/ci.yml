@@ -54,19 +54,13 @@ jobs:
         docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/swiggy:${{ env.IMAGE_TAG }} .
 
     # 9️⃣ Install Trivy
-    - name: Install Trivy
-      run: |
-        sudo apt-get install -y wget apt-transport-https gnupg
-        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-        echo deb https://aquasecurity.github.io/trivy-repo/deb stable main | sudo tee -a /etc/apt/sources.list.d/trivy.list
-        sudo apt-get update
-        sudo apt-get install trivy -y
-
-    # 🔟 Trivy Scan
     - name: Trivy Scan
-      run: |
-        trivy image --exit-code 1 --severity HIGH,CRITICAL \
-        ${{ secrets.DOCKERHUB_USERNAME }}/swiggy:${{ env.IMAGE_TAG }}
+      uses: aquasecurity/trivy-action@0.20.0
+      with:
+        image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/swiggy:${{ env.IMAGE_TAG }}
+        format: table
+        exit-code: 1
+        severity: HIGH,CRITICAL
 
     # 1️⃣1️⃣ Push Docker Image
     - name: Push Docker Image
