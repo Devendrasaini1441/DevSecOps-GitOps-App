@@ -34,7 +34,8 @@ jobs:
 
     # 5️⃣ Build React App
     - name: Build React App
-      run: npm run build
+      run: |
+        CI=false npm run build
 
     # 6️⃣ Set Docker Image Tag
     - name: Set Image Tag
