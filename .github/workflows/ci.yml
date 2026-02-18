@@ -9,7 +9,7 @@ jobs:
 
     steps:
 
-    # 1️⃣ Checkout Code
+    # 1️⃣ Checkout App Code
     - name: Checkout Code
       uses: actions/checkout@v3
 
@@ -53,7 +53,7 @@ jobs:
       run: |
         docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/swiggy:${{ env.IMAGE_TAG }} .
 
-    # 9️⃣ Install Trivy
+    # 9️⃣ Trivy Scan
     - name: Trivy Scan
       uses: aquasecurity/trivy-action@0.20.0
       with:
@@ -62,7 +62,30 @@ jobs:
         exit-code: 1
         severity: HIGH,CRITICAL
 
-    # 1️⃣1️⃣ Push Docker Image
+    # 🔟 Push Docker Image
     - name: Push Docker Image
       run: |
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/swiggy:${{ env.IMAGE_TAG }}
+
+    # 1️⃣1️⃣ Checkout GitOps Repo
+    - name: Checkout GitOps Repo
+      uses: actions/checkout@v3
+      with:
+        repository: Devendrasaini1441/DevSecOps-GitOps-Repo
+        token: ${{ secrets.GITOPS_TOKEN }}
+        path: gitops
+
+    # 1️⃣2️⃣ Update Image Tag in Deployment YAML
+    - name: Update Image Tag
+      run: |
+        sed -i "s|image: .*|image: ${{ secrets.DOCKERHUB_USERNAME }}/swiggy:${{ env.IMAGE_TAG }}|g" gitops/deployment.yaml
+
+    # 1️⃣3️⃣ Commit and Push Changes
+    - name: Commit and Push to GitOps Repo
+      run: |
+        cd gitops
+        git config user.name "Devendrasaini1441"
+        git config user.email "devsaini1441@gmail.com"
+        git add .
+        git commit -m "Update image to ${{ env.IMAGE_TAG }}" || echo "No changes to commit"
+        git push
